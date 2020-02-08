@@ -1,0 +1,14 @@
+{
+    "name": "FCM",
+    "alias": "fcm",
+    "description": "",
+    "keywords": [],
+    "active": 1,
+    "order": 0,
+    "providers": [
+        "Modules\\FCM\\Providers\\FCMServiceProvider"
+    ],
+    "aliases": {},
+    "files": [],
+    "requires": []
+}
