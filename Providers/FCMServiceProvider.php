@@ -19,6 +19,10 @@ class FCMServiceProvider extends ServiceProvider
         $this->registerViews();
         $this->registerFactories();
         $this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
+
+        $this->commands([
+            \Modules\FCM\Console\DoSQLFCM::class,
+        ]);
     }
 
     /**
