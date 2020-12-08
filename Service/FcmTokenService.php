@@ -15,16 +15,16 @@ class FcmTokenService
     {
 
         $fcm_tokens = FcmToken::when(isset($params['user_id']), function ($query) use ($params) {
-            return $query->where('user_id', $params['user_id']);
+            $query->where('user_id', $params['user_id']);
         })
             ->when(isset($params['user_type']), function ($query) use ($params) {
-                return $query->where('user_type', $params['user_type']);
+                $query->where('user_type', $params['user_type']);
             })
             ->when(isset($params['token']), function ($query) use ($params) {
-                return $query->where('token', $params['token']);
+                $query->where('token', $params['token']);
             })
             ->when(isset($params['device_id']), function ($query) use ($params) {
-                return $query->where('device_id', $params['device_id']);
+                $query->where('device_id', $params['device_id']);
             })
             ->when((isset($params['page']) && isset($params['per_page'])), function ($query) use ($params) {
                 $query->skip($params['page'] * $params['per_page']);
