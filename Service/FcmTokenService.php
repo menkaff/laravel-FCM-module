@@ -56,71 +56,10 @@ class FcmTokenService
         return serviceOk(true);
     }
 
-    public function push_notification($user_type, $user_id, $data)
+    public function push_notification($user_type, $user_id,$notif_type_obj)
     {
-        $inputs = [
-            'user_type' => $user_type,
-            'user_id' => $user_id,
-            'data' => $data,
-        ];
-        $validator = Validator::make($inputs, [
-            'user_type' => 'required|exists:fcm_token',
-            'user_id' => 'required|exists:fcm_token']);
-
-        if ($validator->fails()) {
-            return responseError($validator->errors());
-        }
-
-        $optionBuilder = new OptionsBuilder();
-        $optionBuilder->setTimeToLive(60 * 20);
-
-        $notificationBuilder = new PayloadNotificationBuilder($data['builder']);
-        $notificationBuilder->setBody($data['body'])
-            ->setSound('default');
-
-        $dataBuilder = new PayloadDataBuilder();
-        $dataBuilder->addData($data['added_data']);
-
-        $option = $optionBuilder->build();
-        $notification = $notificationBuilder->build();
-        $data = $dataBuilder->build();
-
-        // $tokens = FcmToken::get()->pluck('token')->toArray();
-        $tokens = FcmToken::where(['user_type' => $user_type, 'user_id' => $user_id])->pluck('token')->toArray();
-        if ($tokens) {
-            $downstreamResponse = FCM::sendTo($tokens, $option, $notification, $data);
-
-            // return Array - you must remove all this tokens in your database
-            $tokens_to_delete = $downstreamResponse->tokensToDelete();
-            FcmToken::whereIn('token', $tokens_to_delete)->delete();
-
-            // return Array (key:token, value:error) - in production you should remove from your database the tokens present in this array
-            $toekens_with_error = $downstreamResponse->tokensWithError();
-            FcmToken::whereIn('token', $toekens_with_error)->delete();
-
-            // return Array (key : oldToken, value : new token - you must change the token in your database)
-            $tokens_to_modify = $downstreamResponse->tokensToModify();
-            foreach ($tokens_to_modify as $key => $value) {
-                FcmToken::where('token', $key)->update(['token' => $value]);
-            }
-
-            // return Array - you should try to resend the message to the tokens in the array
-            $tokens_to_retry = $downstreamResponse->tokensToRetry();
-
-            if ($tokens_to_retry) {
-                $downstreamResponse = FCM::sendTo($tokens_to_retry, $option, $notification, $data);
-            }
-
-            return serviceOk([
-                'success' => $downstreamResponse->numberSuccess(),
-                'fail' => $downstreamResponse->numberFailure(),
-                'modify' => $downstreamResponse->numberModification(),
-            ]);
-
-        } else {
-            return serviceError(false);
-        }
-
+        $user=$user_type::findOrFail($user_id);
+        $user->notify( $notif_type_obj);
     }
 
 }
