@@ -56,11 +56,13 @@ class FcmTokenService
         return serviceOk(true);
     }
 
+
     public function push_notification_with_firebase($user_type, $user_id,$notif_type_obj)
     {
         $user=$user_type::findOrFail($user_id);
         $user->notify( $notif_type_obj);
     }
+
 
     public function push_notification_with_pushe($app_id, $user_id, $user_type, $data,$custom=['data'=>1])
     {
