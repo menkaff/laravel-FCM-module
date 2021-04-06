@@ -11,7 +11,7 @@ use Validator;
 
 class FcmTokenService
 {
-    public function index($params = null)
+    public function Index($params = null)
     {
 
         $fcm_tokens = FcmToken::when(isset($params['user_id']), function ($query) use ($params) {
@@ -36,7 +36,7 @@ class FcmTokenService
         return serviceOk($fcm_tokens);
     }
 
-    public function store($params = null)
+    public function Store($params = null)
     {
         $validator = Validator::make($params, [
             'token' => 'required',
@@ -57,14 +57,14 @@ class FcmTokenService
     }
 
 
-    public function push_notification_with_firebase($user_type, $user_id,$notif_type_obj)
+    public function PushNotificationWithFirebase($user_type, $user_id,$notif_type_obj)
     {
         $user=$user_type::findOrFail($user_id);
         $user->notify( $notif_type_obj);
     }
 
 
-    public function push_notification_with_pushe($app_id, $user_id, $user_type, $data,$custom=['data'=>1])
+    public function PushNotificationWithPushe($app_id, $user_id, $user_type, $data,$custom=['data'=>1])
     {
         $YOUR_TOKEN = '0227cb2ba3666c83a84e2fd8c3895b18bd7b01fa';
         $YOUR_APP_ID = $app_id;
