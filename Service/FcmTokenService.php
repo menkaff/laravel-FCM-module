@@ -56,70 +56,44 @@ class FcmTokenService
         return serviceOk(true);
     }
 
-    public function push_notification($user_type, $user_id, $data)
+    public function push_notification_with_firebase($user_type, $user_id,$notif_type_obj)
     {
-        $inputs = [
-            'user_type' => $user_type,
-            'user_id' => $user_id,
+        $user=$user_type::findOrFail($user_id);
+        $user->notify( $notif_type_obj);
+    }
+
+    public function push_notification_with_pushe($app_id, $user_id, $user_type, $data,$custom=['data'=>1])
+    {
+        $YOUR_TOKEN = '0227cb2ba3666c83a84e2fd8c3895b18bd7b01fa';
+        $YOUR_APP_ID = $app_id;
+
+        $ch = curl_init('https://api.pushe.co/v2/messaging/notifications/');
+
+        curl_setopt_array($ch, array(
+            CURLOPT_POST => 1,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => array(
+                "Content-Type: application/json",
+                "Authorization: Token " . $YOUR_TOKEN,
+            ),
+        ));
+
+        $deviceIds = FcmToken::where(['user_type' => $user_type, 'user_id' => $user_id])->pluck('device_id')->toArray();
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(array(
+            'app_ids' => $YOUR_APP_ID,
             'data' => $data,
-        ];
-        $validator = Validator::make($inputs, [
-            'user_type' => 'required|exists:fcm_token',
-            'user_id' => 'required|exists:fcm_token']);
+            'custom_content' => $custom,
+            'filters' => array(
+                'device_id' => $deviceIds,
+            )
+        )));
 
-        if ($validator->fails()) {
-            return responseError($validator->errors());
-        }
+        $result = curl_exec($ch);
 
-        $optionBuilder = new OptionsBuilder();
-        $optionBuilder->setTimeToLive(60 * 20);
+        curl_close($ch);
 
-        $notificationBuilder = new PayloadNotificationBuilder($data['builder']);
-        $notificationBuilder->setBody($data['body'])
-            ->setSound('default');
-
-        $dataBuilder = new PayloadDataBuilder();
-        $dataBuilder->addData($data['added_data']);
-
-        $option = $optionBuilder->build();
-        $notification = $notificationBuilder->build();
-        $data = $dataBuilder->build();
-
-        // $tokens = FcmToken::get()->pluck('token')->toArray();
-        $tokens = FcmToken::where(['user_type' => $user_type, 'user_id' => $user_id])->pluck('token')->toArray();
-        if ($tokens) {
-            $downstreamResponse = FCM::sendTo($tokens, $option, $notification, $data);
-
-            // return Array - you must remove all this tokens in your database
-            $tokens_to_delete = $downstreamResponse->tokensToDelete();
-            FcmToken::whereIn('token', $tokens_to_delete)->delete();
-
-            // return Array (key:token, value:error) - in production you should remove from your database the tokens present in this array
-            $toekens_with_error = $downstreamResponse->tokensWithError();
-            FcmToken::whereIn('token', $toekens_with_error)->delete();
-
-            // return Array (key : oldToken, value : new token - you must change the token in your database)
-            $tokens_to_modify = $downstreamResponse->tokensToModify();
-            foreach ($tokens_to_modify as $key => $value) {
-                FcmToken::where('token', $key)->update(['token' => $value]);
-            }
-
-            // return Array - you should try to resend the message to the tokens in the array
-            $tokens_to_retry = $downstreamResponse->tokensToRetry();
-
-            if ($tokens_to_retry) {
-                $downstreamResponse = FCM::sendTo($tokens_to_retry, $option, $notification, $data);
-            }
-
-            return serviceOk([
-                'success' => $downstreamResponse->numberSuccess(),
-                'fail' => $downstreamResponse->numberFailure(),
-                'modify' => $downstreamResponse->numberModification(),
-            ]);
-
-        } else {
-            return serviceError(false);
-        }
+        return $result;
 
     }
 
