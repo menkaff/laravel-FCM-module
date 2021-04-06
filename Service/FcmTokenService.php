@@ -55,18 +55,15 @@ class FcmTokenService
 
         return serviceOk(true);
     }
-
-
     public function PushNotificationWithFirebase($user_type, $user_id,$notif_type_obj)
     {
         $user=$user_type::findOrFail($user_id);
         $user->notify( $notif_type_obj);
     }
 
-
     public function PushNotificationWithPushe($app_id, $user_id, $user_type, $data,$custom=['data'=>1])
     {
-        $YOUR_TOKEN = '0227cb2ba3666c83a84e2fd8c3895b18bd7b01fa';
+        $YOUR_AUTH_TOKEN = 'your-token';
         $YOUR_APP_ID = $app_id;
 
         $ch = curl_init('https://api.pushe.co/v2/messaging/notifications/');
@@ -77,7 +74,7 @@ class FcmTokenService
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => array(
                 "Content-Type: application/json",
-                "Authorization: Token " . $YOUR_TOKEN,
+                "Authorization: Token " . $YOUR_AUTH_TOKEN,
             ),
         ));
 
@@ -92,12 +89,8 @@ class FcmTokenService
         )));
 
         $result = curl_exec($ch);
-
         curl_close($ch);
-
         return $result;
-
-
     }
 
 }
