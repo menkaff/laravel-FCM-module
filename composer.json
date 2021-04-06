@@ -21,5 +21,9 @@
         "psr-4": {
             "Modules\\FCM\\": ""
         }
-    }
+    },
+  "require": {
+    "ext-curl": "*",
+      "ext-json": "*"
+  }
 }

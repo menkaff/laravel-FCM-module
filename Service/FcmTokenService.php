@@ -55,11 +55,42 @@ class FcmTokenService
 
         return serviceOk(true);
     }
-
-    public function push_notification($user_type, $user_id,$notif_type_obj)
+    public function pushNotificationWithFirebase($user_type, $user_id,$notif_type_obj)
     {
         $user=$user_type::findOrFail($user_id);
         $user->notify( $notif_type_obj);
+    }
+
+    public function pushNotificationWithPushe($app_id, $user_id, $user_type, $data,$custom=['data'=>1])
+    {
+        $YOUR_AUTH_TOKEN = 'your-token';
+        $YOUR_APP_ID = $app_id;
+
+        $ch = curl_init('https://api.pushe.co/v2/messaging/notifications/');
+
+        curl_setopt_array($ch, array(
+            CURLOPT_POST => 1,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => array(
+                "Content-Type: application/json",
+                "Authorization: Token " . $YOUR_AUTH_TOKEN,
+            ),
+        ));
+
+        $deviceIds = FcmToken::where(['user_type' => $user_type, 'user_id' => $user_id])->pluck('device_id')->toArray();
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(array(
+            'app_ids' => $YOUR_APP_ID,
+            'data' => $data,
+            'custom_content' => $custom,
+            'filters' => array(
+                'device_id' => $deviceIds,
+            )
+        )));
+
+        $result = curl_exec($ch);
+        curl_close($ch);
+        return $result;
     }
 
 }
